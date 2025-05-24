@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Student, Ticket
+from .models import FeedbackGPT, Student, Ticket
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,3 +13,8 @@ class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Ticket
         fields = '__all__'
+
+class FeedbackGPTSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeedbackGPT
+        fields = "__all__"
