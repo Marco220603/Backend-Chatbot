@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Home - Centro de Monitoreo</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+        /* Reset and base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #fff;
+            font-family: 'Montserrat', sans-serif;
+            color: #b30000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 1rem;
+        }
+        .container {
+            background: #fff;
+            border: 2px solid #b30000;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            padding: 2.5rem 2rem 3rem;
+            box-shadow: 0 10px 25px rgba(179, 0, 0, 0.2);
+        }
+        .welcome-msg {
+            font-weight: 600;
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            line-height: 1.4;
+        }
+        .welcome-msg span.emoji {
+            font-size: 1.4rem;
+            vertical-align: middle;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        button {
+            background-color: #b30000;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.9rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(179, 0, 0, 0.5);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+            margin: 0 0.5rem;
+        }
+        button:hover,
+        button:focus {
+            background-color: #ff1a1a;
+            box-shadow: 0 8px 25px #ff1a1acc;
+            transform: translateY(-2px);
+            outline: none;
+        }
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 4px 10px #cc0000cc;
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 2rem 1.5rem 2.5rem;
+                max-width: 100%;
+            }
+            .welcome-msg {
+                font-size: 1.2rem;
+            }
+            button {
+                font-size: 1rem;
+            }
+        }
+        /* los <a> se ven como botones */
+        .btn-link{
+        text-decoration:none;
+        background:#b30000;
+        color:#fff;
+        border-radius:10px;
+        padding:0.9rem 1.5rem;
+        font-size:1.1rem;
+        font-weight:700;
+        margin:0 0.5rem;
+        display:inline-block;
+        box-shadow:0 6px 15px rgba(179,0,0,.5);
+        transition:background .3s, box-shadow .3s, transform .2s;
+        }
+        .btn-link:hover{background:#ff1a1a;box-shadow:0 8px 25px #ff1a1acc;transform:translateY(-2px);}
+    </style>
+</head>
+<body>
+    <main class="container" role="main" aria-label="Interfaz de inicio">
+        <p class="welcome-msg" aria-live="polite">
+            {% csrf_token %}
+            <span class="emoji" aria-hidden="true">🏠</span>
+            Bienvenid@ al centro de monitoreo para el curso de Taller de Proyecto UPC,<br />
+            explora las opciones disponibles <span class="emoji" aria-hidden="true">🔍</span>
+        </p>
+        <div class="button-group">
+             <!-- Ver Reportes -->
+            <a class="btn-link" href="{% url 'tickets' %}" aria-label="Ver Reportes">
+                Ver Reportes
+            </a>
+            <!-- Configuraciones -->
+            <a class="btn-link" href="" aria-label="Configuraciones">
+                Configuraciones
+            </a>
+            <!-- Cerrar sesión -->
+            <button id="logout-btn" type="button" aria-label="Cerrar Sesión">
+                Cerrar Sesión
+            </button>
+            <!-- Formulario oculto -->
+            <form id="logout-form" action="{% url 'logout' %}" method="POST" style="display:none;">
+                {% csrf_token %}
+            </form>
+        </div>
+    </main>
+</body>
+<script>
+    document.getElementById('logout-btn')
+    .addEventListener('click', () => document.getElementById('logout-form').submit());
+</script>
+</html>

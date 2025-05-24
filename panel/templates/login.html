@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Login - Centro de Monitoreo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+  /* Reset and base */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background: #fff;
+    font-family: 'Montserrat', sans-serif;
+    color: #b30000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 1rem;
+  }
+  .container {
+    background: #fff;
+    border: 2px solid #b30000;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 100%;
+    padding: 2.5rem 2rem 3rem;
+    box-shadow: 0 10px 25px rgba(179, 0, 0, 0.2);
+  }
+  .welcome-msg {
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .welcome-msg span.emoji {
+    font-size: 1.4rem;
+    vertical-align: middle;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    align-items: center
+  }
+  label {
+    display: flex;
+    align-items: center;
+    color: #b30000;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    user-select: none;
+  }
+  label svg, label .emoji {
+    margin-right: 0.5rem;
+    fill: #b30000;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  input[type="text"],
+  input[type="password"] {
+    border: 2px solid #b30000;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-weight: 400;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    outline-offset: 2px;
+  }
+  input[type="text"]:focus,
+  input[type="password"]:focus {
+    border-color: #ff4d4d;
+    box-shadow: 0 0 8px #ff4d4daa;
+  }
+  .input-group {
+    margin-bottom: 1.5rem;
+  }
+  button {
+    background-color: #b30000;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 15px rgba(179, 0, 0, 0.5);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  }
+  button:hover,
+  button:focus {
+    background-color: #ff1a1a;
+    box-shadow: 0 8px 25px #ff1a1acc;
+    transform: translateY(-2px);
+    outline: none;
+  }
+  button:active {
+    transform: translateY(1px);
+    box-shadow: 0 4px 10px #cc0000cc;
+  }
+  @media (max-width: 480px) {
+    .container {
+      padding: 2rem 1.5rem 2.5rem;
+      max-width: 100%;
+    }
+    .welcome-msg {
+      font-size: 1.1rem;
+    }
+    button {
+      font-size: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <main class="container" role="main" aria-label="Interfaz de inicio de sesión">
+    <p class="welcome-msg" aria-live="polite">
+      <span class="emoji" aria-hidden="true">👋</span>
+      Hola, bienvenid@ al centro de monitoreo para el curso de Taller de Proyecto UPC,<br />
+      inicia sesión para comenzar <span class="emoji" aria-hidden="true">🚀</span>
+    </p>
+    <form method="POST">
+        {% csrf_token %}
+      <div class="input-group">
+        <label for="username">
+          <span class="emoji" aria-hidden="true">👤</span>
+          Usuario
+        </label>
+        <input type="text" id="username" name="username" autocomplete="username" placeholder="Ingresa tu usuario o correo" required aria-required="true" />
+      </div>
+      <div class="input-group">
+        <label for="password">
+          <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+            <path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zm-6-2a2 2 0 0 1 4 0v2h-4z"></path>
+          </svg>
+          Contraseña
+        </label>
+        <input type="password" id="password" name="password" autocomplete="current-password" placeholder="Ingresa tu contraseña" required aria-required="true" />
+      </div>
+      <button type="submit" aria-label="Iniciar sesión">Iniciar sesión <span class="emoji" aria-hidden="true">🔐</span></button>
+    </form>
+  </main>
+</body>
+</html>
