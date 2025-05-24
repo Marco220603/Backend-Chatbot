@@ -57,3 +57,21 @@ class Ticket(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     closed_at = models.DateTimeField(null=True, blank=True)
+
+class FeedbackGPT(models.Model):
+    SATISFACTION_CHOICES = [
+        ('positive', 'Positiva'),
+        ('negative', 'Negativa'),
+    ]
+    STATUS_CHOICES = [
+        ('pending', 'Pendiente'),
+        ('approved', 'Aprobado'),
+        ('rejected', 'Rechazado'),
+    ]
+    user_message = models.TextField()
+    bot_response = models.TextField()
+    satisfaction = models.CharField(max_length=10, choices=SATISFACTION_CHOICES)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"Feedback: {self.user_message[:30]}..."

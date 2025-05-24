@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from .serializer import StudentSerializer, TicketSerializer
-from .models import Student, WhatsAppUserStudent,Ticket
+from rest_framework import generics
+from .serializer import FeedbackGPTSerializer, StudentSerializer, TicketSerializer
+from .models import FeedbackGPT, Student, WhatsAppUserStudent,Ticket
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import requests
@@ -12,6 +13,10 @@ from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
+    
+class FeedbackGPTCreateView(generics.CreateAPIView):
+    queryset = FeedbackGPT.objects.all()
+    serializer_class = FeedbackGPTSerializer
     
 @api_view(['POST'])
 def validar_codigo_estudiante(request):
@@ -67,7 +72,7 @@ def validar_codigo_estudiante(request):
     )
 
 # Constantes RASA
-RASA_REST_WEBHOOK = 'https://bb3e-38-253-158-240.ngrok-free.app/webhooks/rest/webhook'
+RASA_REST_WEBHOOK = 'http://localhost:5005/webhooks/rest/webhook'
 RASA_MODEL_PARSE = 'https://a084-200-0-118-230.ngrok-free.app/webhooks/rest/webhook'
 
 @api_view(['POST'])

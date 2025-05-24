@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework import routers
 from api import views
-from .views import TicketPlainListView, TicketDetailView
+from .views import FeedbackGPTCreateView, TicketPlainListView, TicketDetailView
 
 router = routers.DefaultRouter()
 
@@ -13,5 +13,6 @@ urlpatterns = [
     path('consulta/', views.consulta_usuario,),
     path('crear_ticket/',views.crearTicket),
     path('tickets-all/', TicketPlainListView.as_view(), name='tickets-all'),
-    path('tickets/<int:pk>/', TicketDetailView.as_view())
+    path('tickets/<int:pk>/', TicketDetailView.as_view()),
+    path('feedbackgpt/', FeedbackGPTCreateView.as_view(), name='feedback-create')
 ]
