@@ -1,7 +1,6 @@
 from django.urls import path, include
 from rest_framework import routers
 from api import views
-from .views import TicketPlainListView, TicketDetailView
 
 router = routers.DefaultRouter()
 
@@ -12,6 +11,8 @@ urlpatterns = [
     path('validar/', views.validar_codigo_estudiante,),
     path('consulta/', views.consulta_usuario,),
     path('crear_ticket/',views.crearTicket),
-    path('tickets-all/', TicketPlainListView.as_view(), name='tickets-all'),
-    path('tickets/<int:pk>/', TicketDetailView.as_view())
+    path('tickets/', views.listar_tickets, name='tickets-all'),
+    path('consultar-pais/', views.consultarPais),
+    path('tickets/<int:id>/', views.obtener_ticket_por_id, name='obtener_ticket_por_id'),
+    path('tickets/<int:id>/reply/', views.reply_ticket),
 ]

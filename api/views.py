@@ -1,11 +1,16 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 from .serializer import StudentSerializer, TicketSerializer
-from .models import Student, WhatsAppUserStudent,Ticket
-from rest_framework.decorators import api_view
+from .models import Student, WhatsAppUserStudent,Ticket, Admin
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 import requests
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
+from rest_framework import status
+from random import choice
+from django.shortcuts import get_object_or_404
+from datetime import datetime
 
 
 # Create your views here.
@@ -153,6 +158,16 @@ def crearTicket(request):
     celular = request.data.get('celular')
     descripcion = request.data.get('descripcion')
     tipo = request.data.get('tipo')
+    
+    prioridades = {
+        "No puedo contactar a mi asesor especializado": "Alta",
+        "No puedo contactar a mi coautor": "Alta",
+        "Ingreso erróneo de código del alumno": "Media",
+        "Error en el nombre del partner": "Media",
+        "Error en el nombre del asesor especializado": "Baja",
+        "No adjunté el documento firmado y aprobado por el asesor especializado": "Alta"
+    }
+    prioridad = prioridades.get(tipo, "Media")
 
     #1. -- VALIDAR ENTRADA --
     if not titulo or not celular or not descripcion or not tipo:
@@ -164,14 +179,44 @@ def crearTicket(request):
     except WhatsAppUserStudent.DoesNotExist:
         return Response({'error': 'Numero de celular no encontrado.'},status=400)
     
+    admin_random = choice(Admin.objects.all())
+    
     #3. -- CREAR TICKET --
     ticket = Ticket.objects.create(
         student = estudiante,
         subject = titulo,
         description = descripcion,
         type_ticket = tipo,
-        
+        priority = prioridad,
+        atendido_por = admin_random
     )
+    
+    # --- NOTIFICAR AL ADMIN POR WHATSAPP ---
+    try:
+        BUILDERBOT_URL = 'http://localhost:3008'
+        FRONTEND_URL = 'http://127.0.0.1:8000/panel'
+        # Formatear número para Baileys (sin +, con 51 al inicio)
+        admin_number = admin_random.cellphone
+        mensaje = (
+            f"📢 *Nuevo Ticket #{ticket.id}*\n"
+            f"👤 Estudiante: {estudiante.student.full_name} ({estudiante.phone_number})\n"
+            f"🎫 Título: {ticket.subject}\n"
+            f"📂 Tipo: {ticket.type_ticket}\n"
+            f"⚡ Prioridad: {ticket.priority}\n"
+            f"📝 Descripción: {ticket.description}\n\n"
+            f"👉 Atendelo aquí: {FRONTEND_URL}/tickets/{ticket.id}"
+        )
+
+        requests.post(
+            f"{BUILDERBOT_URL}/v1/messages",
+            {
+                "number": admin_number,
+                "message":  mensaje
+            }
+        )
+    except Exception as e:
+        # Logealo; no queremos que el fallo de WhatsApp impida crear el ticket
+        print(f"Error enviando WhatsApp: {e}")
     
     return Response(
         {
@@ -185,12 +230,88 @@ def crearTicket(request):
         status=201
     )
 
-class TicketPlainListView(ListAPIView):
-    serializer_class = TicketSerializer
-    queryset = Ticket.objects.select_related('student', 'atendido_por')
-    pagination_class = None        # 🔑  sin paginación
-    filter_backends  = []          # 🔑  sin filtros
+@api_view(['POST'])
+def consultarPais(request):
+    pais = request.data.get('message')
+    if not pais:
+        return Response({'error': 'no se recibio ningun pais'}, status=400)
+    try:
+        respuesta = requests.get(f"https://restcountries.com/v3.1/name/{pais}")
+        if respuesta.status_code != 200:
+            return Response({'error': 'País no encontrado o error de la API'}, status=respuesta.status_code)    
+        data = respuesta.json()
+        print(data)
+        pais_info = data[0]
+        resultado = {
+            "nombre": pais_info['name']['common'],
+            "capital": pais_info.get('capital', ['Desconocida'])[0],
+            "region": pais_info.get('region', 'Desconocida'),
+            "poblacion": pais_info.get('population', 'Desconocida'),
+            "bandera": pais_info['flags']['png']
+        }
+        return Response(resultado)
+    except Exception as e:
+        print(f"Error al consultar API externa: {e}")
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class TicketDetailView(RetrieveUpdateAPIView):
-    queryset = Ticket.objects.select_related('student', 'atendido_por')
-    serializer_class = TicketSerializer   # soporta GET y PATCH
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def listar_tickets(request):
+    tickets = Ticket.objects.all().order_by('-id')
+    serializer = TicketSerializer(tickets, many = True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def obtener_ticket_por_id(request, id):
+    try:
+        ticket = Ticket.objects.get(id=id)
+    except Ticket.DoesNotExist:
+        return Response({'error': 'Ticket no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = TicketSerializer(ticket)
+    return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])               # solo admins logeados
+def reply_ticket(request, id):
+    message = request.data.get('message', '').strip()
+    if not message:
+        return Response({'error': 'Falta el mensaje.'}, status=400)
+
+    ticket = get_object_or_404(Ticket, id=id)
+
+    # optional: verificar que request.user sea el admin asignado
+    # if request.user != ticket.atendido_por.user: ...
+
+    # 1) Actualizar ticket
+    ticket.state      = 'in_progress'
+    ticket.updated_at = datetime.now().time()
+    ticket.save()
+
+    # 2) Formatear mensaje para WhatsApp
+    admin_user   = ticket.atendido_por.user
+    estudiante   = ticket.student
+    numero_alumno = estudiante.phone_number
+    texto = (
+        f"✅ *Respuesta a tu Ticket #{ticket.id}*\n"
+        f"👨‍💼 Administrador: {admin_user.first_name} {admin_user.last_name}\n"
+        f"🎫 Título: {ticket.subject}\n"
+        f"💬 Respuesta:\n{message}\n\n"
+    )
+
+    # 3) Llamar a BuilderBot
+    BUILDERBOT_URL = 'http://localhost:3008'
+    try:
+        requests.post(
+            f"{BUILDERBOT_URL}/v1/sendAnswer",
+            json={
+                "number": numero_alumno,
+                "message": texto
+            },
+            timeout=5
+        )
+    except Exception as e:
+        print('Error enviando WhatsApp:', e)
+
+    return Response({'detail': 'Respuesta enviada y ticket actualizado.'}, status=200)
