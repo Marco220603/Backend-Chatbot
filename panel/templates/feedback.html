@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Centro de Gestión de Tickets</title>
+  <title>Centro de Gestión de Feedback</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
     /* ————— Reset & base ————— */
@@ -26,7 +26,7 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
     /* — Sidebar — */
-    aside.sidebar {
+        aside.sidebar {
       width: 240px;
       background: #fff;
       border-right: 1px solid #eee;
@@ -120,10 +120,6 @@
       border-radius: 8px;
       outline: none;
     }
-    .filter-group select:focus {
-      border-color: #ff4d4d;
-      box-shadow: 0 0 8px rgba(255,77,77,.4);
-    }
     .search-group {
       margin-left: auto;
       display: flex;
@@ -135,10 +131,6 @@
       border-radius: 8px 0 0 8px;
       outline: none;
     }
-    .search-input:focus {
-      border-color: #ff4d4d;
-      box-shadow: 0 0 8px rgba(255,77,77,.4);
-    }
     .search-button {
       background: #b30000;
       color: #fff;
@@ -148,12 +140,9 @@
       font-weight: 600;
       transition: background .3s;
     }
-    .search-button:hover {
-      background: #cc0000;
-    }
 
-    /* — Tabla de tickets — */
-    .tickets-table {
+    /* — Tabla de feedback — */
+    .feedback-table {
       width: 100%;
       border-collapse: collapse;
       box-shadow: 0 5px 15px rgba(179,0,0,.1);
@@ -161,56 +150,20 @@
       overflow: hidden;
       margin-top: 1rem;
     }
-    .tickets-table th {
+    .feedback-table th {
       background: #b30000;
       color: #fff;
       padding: 1rem;
       text-align: left;
       font-weight: 600;
     }
-    .tickets-table td {
+    .feedback-table td {
       padding: .8rem 1rem;
       border-bottom: 1px solid #eee;
       vertical-align: middle;
     }
-    .tickets-table tr:nth-child(even) { background: #fff5f5; }
-    .tickets-table tr:hover      { background: #ffe6e6; }
-
-    /* — Badges — */
-    .badge {
-      display: inline-block;
-      padding: .3rem .6rem;
-      border-radius: 30px;
-      font-size: .8rem;
-      font-weight: 600;
-      color: #fff;
-      text-transform: capitalize;
-    }
-    .badge-pending     { background: #f0ad4e; }
-    .badge-in_progress { background: #5bc0de; }
-    .badge-resolved    { background: #5cb85c; }
-    .badge-closed      { background: #d9534f; }
-    .badge-baja        { background: #5cb85c; }
-    .badge-media       { background: #f0ad4e; }
-    .badge-alta        { background: #d9534f; }
-    .badge-technical   { background: #5bc0de; }
-    .badge-academic    { background: #7952b3; }
-    .badge-other       { background: #777; }
-
-    /* — Botones de acción — */
-    .action-button {
-      background: #b30000;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: .4rem .8rem;
-      font-size: .85rem;
-      font-weight: 600;
-      transition: background .3s;
-    }
-    .action-button:hover {
-      background: #cc0000;
-    }
+    .feedback-table tr:nth-child(even) { background: #fff5f5; }
+    .feedback-table tr:hover      { background: #ffe6e6; }
 
     /* — Modal (oculto por defecto) — */
     .modal {
@@ -250,10 +203,6 @@
     .modal-body > div {
       margin-bottom: .75rem;
     }
-    .modal-body p {
-      margin-top:.25rem;
-      line-height:1.4;
-    }
     .modal-footer {
       margin-top: 1.5rem;
       display: flex;
@@ -278,8 +227,7 @@
     /* — Responsive menor — */
     @media (max-width: 768px) {
       .filters { flex-direction: column; }
-      .search-group { margin-left: 0; width: 100%; }
-      .tickets-table { display: block; overflow-x: auto; }
+      .feedback-table { display: block; overflow-x: auto; }
     }
   </style>
 </head>
@@ -299,7 +247,7 @@
           <svg viewBox="0 0 24 24"><path d="M4 13h6v-6H4v6zm0 8h6v-6H4v6zm8 0h6v-6h-6v6zm0-8h6v-6h-6v6z"/></svg>
           Dashboard
         </a>
-        <a href="#tickets" class="active">
+        <a href="http://localhost:8000/panel/tickets/" class="active">
           <svg viewBox="0 0 24 24"><path d="M5 8h14v2H5zM5 12h14v2H5z"/></svg>
           Tickets
         </a>
@@ -317,89 +265,67 @@
     <!-- MAIN CONTENT -->
     <main>
       <header class="main-header">
-        <h1>Centro de Gestión de Tickets</h1>
+        <h1>Actualización de Feedback</h1>
         <div class="user-greet">Bienvenido, Admin</div>
       </header>
 
-      <!-- FILTROS -->
-      <div class="filters">
-        <div class="filter-group">
-          <label for="filter-state">Estado</label>
-          <select id="filter-state">
-            <option value="">Todos</option>
-            <option value="pending">Pendiente</option>
-            <option value="in_progress">En Progreso</option>
-            <option value="resolved">Resuelto</option>
-            <option value="closed">Cerrado</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="filter-type">Tipo</label>
-          <select id="filter-type">
-            <option value="">Todos</option>
-            <option value="technical">Técnico</option>
-            <option value="academic">Académico</option>
-            <option value="other">Otro</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="filter-priority">Prioridad</label>
-          <select id="filter-priority">
-            <option value="">Todas</option>
-            <option value="baja">Baja</option>
-            <option value="media">Media</option>
-            <option value="alta">Alta</option>
-          </select>
-        </div>
-        <div class="search-group">
-          <input type="text" id="search-input" class="search-input" placeholder="Buscar por asunto…">
-          <button id="search-button" class="search-button">🔍 Buscar</button>
-        </div>
-      </div>
-
       <!-- TABLA -->
-      <table class="tickets-table">
+
+      <table class="feedback-table">
         <thead>
           <tr>
             <th>ID</th>
-            <th>Asunto</th>
-            <th>Estudiante</th>
-            <th>Tipo</th>
-            <th>Estado</th>
-            <th>Prioridad</th>
-            <th>Creado</th>
-            <th>Atendido por</th>
+            <th>Consulta del Usuario</th>
+            <th>Respuesta del Bot</th>
+            <th>Fecha de Creación</th>
             <th>Acciones</th>
           </tr>
         </thead>
-        <tbody id="tickets-body">
-          <!-- Aquí inyectaremos filas vía JS -->
-        </tbody>
+        <tbody id="feedback-body">
+          <!-- Aquí se inyectarán las filas mediante JS -->
+          <tr>
+            <td>#1</td>
+            <td>¿Cuándo es la fecha de entrega del proyecto?</td>
+            <td>La fecha de entrega es el 30 de junio.</td>
+            <td>2025-06-18 14:00:00</td>
+            <td>
+              <!-- Icono Editar -->
+              <a href="/feedback/edit/1" class="action-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                  <path d="M14.059 2.933l7.999 7.999-2.999 3L11.059 5.933l2.999-3c.49-.49 1.283-.492 1.773 0zM2 16.059V22h5.941l11.618-11.618-5.941-5.941L2 16.059z"/>
+                </svg>
+                Editar
+              </a>
+            
+              <!-- Icono Eliminar -->
+              <a href="/feedback/delete/1" class="action-button" style="color: red;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                  <path d="M6 2L5 3H4v1h1v14h14V4h1V3h-1L18 2h-5V1H11v1H6zM6 18V5h12v13H6z"/>
+                </svg>
+                Eliminar
+              </a>
+            </td>
+          </tr>
+        <!-- Más filas de datos se agregarán aquí -->
+      </tbody>
       </table>
+
     </main>
   </div>
 
   <!-- MODAL -->
-  <div id="ticket-modal" class="modal">
+  <div id="feedback-modal" class="modal">
     <div class="modal-content">
       <span class="modal-close">&times;</span>
-      <h2>Ticket #<span id="modal-id"></span></h2>
+      <h2>Feedback #<span id="modal-id"></span></h2>
       <div class="modal-body">
         <div><strong>Asunto:</strong> <span id="modal-subject"></span></div>
         <div><strong>Descripción:</strong>
           <p id="modal-desc"></p>
         </div>
         <div><strong>Estudiante:</strong> <span id="modal-student"></span></div>
-        <div><strong>Email:</strong>      <span id="modal-email"></span></div>
-        <div><strong>Celular:</strong>    <span id="modal-cell"></span></div>
-        <div><strong>Carrera:</strong>    <span id="modal-career"></span></div>
-        <div><strong>Tipo:</strong>       <span id="modal-type"></span></div>
-        <div><strong>Estado:</strong>     <span id="modal-state"></span></div>
-        <div><strong>Prioridad:</strong>  <span id="modal-priority"></span></div>
-        <div><strong>Creado:</strong>     <span id="modal-created"></span></div>
-        <div><strong>Actualizado:</strong><span id="modal-updated"></span></div>
-        <div><strong>Cerrado:</strong>    <span id="modal-closed"></span></div>
-        <div><strong>Atendido por:</strong><span id="modal-attended"></span></div>
+        <div><strong>Tipo:</strong> <span id="modal-type"></span></div>
+        <div><strong>Estado:</strong> <span id="modal-state"></span></div>
       </div>
       <div class="modal-footer">
         <label for="modal-reply">Respuesta al estudiante:</label>
@@ -410,7 +336,7 @@
   </div>
 
   <script>
-    // — Helpers —
+    // — Helpers y funciones principales —
     function formatDate(iso) {
       return new Date(iso).toLocaleString('es-PE', {
         day:'2-digit',month:'2-digit',year:'numeric',
@@ -422,108 +348,75 @@
       return v ? v.pop() : '';
     }
 
-    let ticketsData = [];
-    let currentTicketId = null;
+    let feedbackData = [];
+    let currentFeedbackId = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      await loadTickets();
-      // filtrado y búsqueda…
-      document.getElementById('search-button')
-              .addEventListener('click', applyFilters);
-      ['filter-state','filter-type','filter-priority']
-        .forEach(id => document.getElementById(id)
-          .addEventListener('change', applyFilters));
+      await loadFeedback();
+      document.getElementById('search-button').addEventListener('click', applyFilters);
     });
 
-    async function loadTickets() {
-      const res = await fetch('/api/tickets/');
-      ticketsData = await res.json();
-      console.log(ticketsData)
-      renderTable(ticketsData);
+    async function loadFeedback() {
+      const res = await fetch('/api/feedback/');
+      feedbackData = await res.json();
+      renderTable(feedbackData);
     }
 
     function applyFilters() {
-      const estado   = document.getElementById('filter-state').value;
-      const tipo     = document.getElementById('filter-type').value;
-      const prioridad= document.getElementById('filter-priority').value;
-      const texto    = document.getElementById('search-input').value.toLowerCase();
-      const fil = ticketsData.filter(t => {
-        const matchEstado   = !estado   || t.state       === estado;
-        const matchTipo     = !tipo     || t.type_ticket === tipo;
-        const matchPrio     = !prioridad|| t.priority    .toLowerCase() === prioridad;
-        const matchTexto    = !texto    || t.subject.toLowerCase().includes(texto);
-        return matchEstado && matchTipo && matchPrio && matchTexto;
+      const estado = document.getElementById('filter-state').value;
+      const texto = document.getElementById('search-input').value.toLowerCase();
+      const fil = feedbackData.filter(f => {
+        const matchEstado = !estado || f.state === estado;
+        const matchTexto = !texto || f.subject.toLowerCase().includes(texto);
+        return matchEstado && matchTexto;
       });
       renderTable(fil);
     }
 
     function renderTable(list) {
-      const body = document.getElementById('tickets-body');
+      const body = document.getElementById('feedback-body');
       body.innerHTML = '';
-      list.forEach(t => {
+      list.forEach(f => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>#${t.id}</td>
-          <td>${t.subject}</td>
-          <td>${t.student.student.full_name}</td>
-          <td><span class="badge badge-${t.type_ticket.toLowerCase()}">${t.type_ticket}</span></td>
-          <td><span class="badge badge-${t.state}">${t.state}</span></td>
-          <td><span class="badge badge-${t.priority.toLowerCase()}">${t.priority}</span></td>
-          <td>${formatDate(t.created_at)}</td>
-          <td>${t.atendido_por.user.first_name || '-'}</td>
-          <td><button class="action-button" onclick="openModal(${t.id})">Ver</button></td>
+          <td>#${f.id}</td>
+          <td>${f.subject}</td>
+          <td>${f.student.full_name}</td>
+          <td><span class="badge badge-${f.type.toLowerCase()}">${f.type}</span></td>
+          <td><span class="badge badge-${f.state}">${f.state}</span></td>
+          <td><button class="action-button" onclick="openModal(${f.id})">Ver</button></td>
         `;
         body.appendChild(tr);
       });
     }
 
-    // — Modal —
-    const modal      = document.getElementById('ticket-modal');
-    const closeIcon  = modal.querySelector('.modal-close');
+    // Modal
+    const modal = document.getElementById('feedback-modal');
+    const closeIcon = modal.querySelector('.modal-close');
     const fld = {
-      id:       document.getElementById('modal-id'),
-      subject:  document.getElementById('modal-subject'),
-      desc:     document.getElementById('modal-desc'),
-      student:  document.getElementById('modal-student'),
-      email:    document.getElementById('modal-email'),
-      cell:     document.getElementById('modal-cell'),
-      career:   document.getElementById('modal-career'),
-      type:     document.getElementById('modal-type'),
-      state:    document.getElementById('modal-state'),
-      priority: document.getElementById('modal-priority'),
-      created:  document.getElementById('modal-created'),
-      updated:  document.getElementById('modal-updated'),
-      closed:   document.getElementById('modal-closed'),
-      attended: document.getElementById('modal-attended'),
-      reply:    document.getElementById('modal-reply')
+      id: document.getElementById('modal-id'),
+      subject: document.getElementById('modal-subject'),
+      desc: document.getElementById('modal-desc'),
+      student: document.getElementById('modal-student'),
+      type: document.getElementById('modal-type'),
+      state: document.getElementById('modal-state'),
+      reply: document.getElementById('modal-reply')
     };
 
     async function openModal(id) {
-      currentTicketId = id;
-      const res = await fetch(`/api/tickets/${id}/`);
-      const t   = await res.json();
-      console.log(t)
-      // Rellenar campos
-      fld.id.textContent        = t.id;
-      fld.subject.textContent   = t.subject;
-      fld.desc.textContent      = t.description;
-      fld.student.textContent   = t.student.student.full_name;
-      fld.email.textContent     = t.student.student.code_upc;
-      fld.cell.textContent      = t.student.phone_number;
-      fld.career.textContent    = t.student.student.career;
-      fld.type.textContent      = t.type_ticket;
-      fld.state.textContent     = t.state;
-      fld.priority.textContent  = t.priority;
-      fld.created.textContent   = formatDate(t.created_at);
-      fld.updated.textContent   = formatDate(t.updated_at);
-      fld.closed.textContent    = t.closed_at ? formatDate(t.closed_at) : '-';
-      fld.attended.textContent  = t.atendido_por.user.first_name || '-';
+      currentFeedbackId = id;
+      const res = await fetch(`/api/feedback/${id}/`);
+      const f = await res.json();
+      fld.id.textContent = f.id;
+      fld.subject.textContent = f.subject;
+      fld.desc.textContent = f.description;
+      fld.student.textContent = f.student.full_name;
+      fld.type.textContent = f.type;
+      fld.state.textContent = f.state;
       fld.reply.value = '';
-      // Mostrar
       modal.classList.add('show');
     }
 
-    // Cerrar modal
     closeIcon.onclick = () => modal.classList.remove('show');
     modal.onclick = e => {
       if (e.target === modal) modal.classList.remove('show');
@@ -533,12 +426,12 @@
     document.getElementById('modal-send').onclick = async () => {
       const msg = fld.reply.value.trim();
       if (!msg) return alert('Escribe una respuesta antes de enviar.');
-      const res = await fetch(`/api/tickets/${currentTicketId}/reply/`, {
+      const res = await fetch(`/api/feedback/${currentFeedbackId}/reply/`, {
         method: 'POST',
-        credentials: 'same-origin',                // usa la sesión y cookies
+        credentials: 'same-origin',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken')     // imprescindible en POST
+          'X-CSRFToken': getCookie('csrftoken')
         },
         body: JSON.stringify({ message: msg })
       });
@@ -549,13 +442,6 @@
         alert('Error enviando la respuesta.');
       }
     };
-
-    // helpers — obtén el token CSRF de la cookie (solo si usas SessionAuth)
-    function getCookie(name) {
-      return document.cookie
-        .split('; ')
-        .find(row => row.startsWith(name + '='))?.split('=')[1];
-    } 
   </script>
 </body>
 </html>

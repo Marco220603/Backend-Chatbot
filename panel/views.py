@@ -46,3 +46,6 @@ def signout(request):
 
 def verTickets(request):
     return render(request, 'tickets.html')
+
+def verFeedback(request):
+    return render(request, 'feedback.html')

@@ -1,7 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from rest_framework import viewsets
 from .serializer import StudentSerializer, TicketSerializer
-from .models import Student, WhatsAppUserStudent,Ticket, Admin
+from .models import Feedback, Student, WhatsAppUserStudent,Ticket, Admin
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 import requests
@@ -11,8 +11,19 @@ from rest_framework import status
 from random import choice
 from django.shortcuts import get_object_or_404
 from datetime import datetime
+import os
+import json
+import time
+import openai
+from dotenv import load_dotenv
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
-
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
+# Constantes RASA
+RASA_REST_WEBHOOK = 'https://bb3e-38-253-158-240.ngrok-free.app/webhooks/rest/webhook'
+RASA_MODEL_PARSE = 'https://a084-200-0-118-230.ngrok-free.app/webhooks/rest/webhook'
 # Create your views here.
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all()
@@ -70,10 +81,6 @@ def validar_codigo_estudiante(request):
         },
         status=200
     )
-
-# Constantes RASA
-RASA_REST_WEBHOOK = 'https://bb3e-38-253-158-240.ngrok-free.app/webhooks/rest/webhook'
-RASA_MODEL_PARSE = 'https://a084-200-0-118-230.ngrok-free.app/webhooks/rest/webhook'
 
 @api_view(['POST'])
 def consulta_usuario2(request):
@@ -273,7 +280,7 @@ def obtener_ticket_por_id(request, id):
     return Response(serializer.data)
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])               # solo admins logeados
+@permission_classes([IsAuthenticated])
 def reply_ticket(request, id):
     message = request.data.get('message', '').strip()
     if not message:
@@ -315,3 +322,91 @@ def reply_ticket(request, id):
         print('Error enviando WhatsApp:', e)
 
     return Response({'detail': 'Respuesta enviada y ticket actualizado.'}, status=200)
+
+@csrf_exempt
+def gpt_response(request):
+    try:
+        data = json.loads(request.body)
+        query = data.get("query", "")
+        context = data.get("context", "")
+        check_only = data.get("check_only", False)
+
+        # Definir los mensajes para OpenAI
+        messages = [
+            {"role": "system", "content": "Eres un asesor académico experto en proyectos universitarios para el curso de taller de proyecto de la universidad peruana de ciencias aplicadas (UPC)."},
+            {"role": "user", "content": f"{context}\n\n{query}" if context else query}
+        ]
+
+        start = time.perf_counter()
+        
+        # Llamada a OpenAI con el modelo y los mensajes
+        response = openai.ChatCompletion.create(
+            model="ft:gpt-4o-mini-2024-07-18:personal:pomisndtrain:BjC9M2PM",
+            messages=messages,  # Aquí pasas los mensajes para la conversación
+            temperature=0.3
+        )
+        
+        end = time.perf_counter()
+
+        # Verificar si la respuesta contiene la información esperada
+        if not response.choices or "message" not in response.choices[0] or "content" not in response.choices[0].message:
+            return JsonResponse({
+                "error": "La respuesta de OpenAI no contiene texto.",
+                "raw_response": response
+            }, status=500)
+
+        # Extraer el texto generado
+        gpt_text = response.choices[0].message["content"]
+        latency = round(end - start, 2)
+
+        # Verificar si solo deseas comprobar si puede responder
+        if check_only:
+            puede = len(gpt_text.strip()) > 10
+            return JsonResponse({"can_answer": puede})
+
+        # Devolver la respuesta generada
+        return JsonResponse({
+            "response": gpt_text,
+            "latencia_segundos": latency
+        })
+
+    except Exception as e:
+        import traceback
+        print("❌ ERROR GPT:\n", traceback.format_exc())
+        return JsonResponse({"error": str(e)}, status=500)
+
+def feedback_delete(request, feedback_id):
+    feedback = get_object_or_404(Feedback, id=feedback_id)
+    feedback.delete()
+    return redirect('feedback_list')
+
+def feedback_list(request):
+    feedbacks = Feedback.objects.all().order_by('-timestamp')
+    return render(request, 'feedback_list.html', {'feedbacks': feedbacks})
+
+def feedback_add(request):
+    if request.method == 'POST':
+        user_message = request.POST.get('user_message')
+        bot_response = request.POST.get('bot_response')
+        feedback = Feedback(user_message=user_message, bot_response=bot_response)
+        feedback.save()
+
+        # Redirige a la lista de feedbacks
+        return redirect('feedback_list')
+    return render(request, 'feedback_add.html')
+
+def feedback_edit(request, feedback_id):
+    feedback = get_object_or_404(Feedback, id=feedback_id)
+    if request.method == 'POST':
+        feedback.user_message = request.POST.get('user_message')
+        feedback.bot_response = request.POST.get('bot_response')
+        feedback.save()
+        return redirect('feedback_list')
+    return render(request, 'feedback_edit.html', {'feedback': feedback})
+
+def update_faiss_index():
+    # Aquí llamamos a FeedbackRAG y recargamos el índice FAISS
+    rag = Feedback()  # Crear una instancia de FeedbackRAG
+    rag.load_data(db_path="ruta/a/tu/base_de_datos.sqlite3")  # Asegúrate de poner la ruta correcta de tu DB
+    print("FAISS index updated.")
+

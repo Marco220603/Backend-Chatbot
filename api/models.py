@@ -57,3 +57,11 @@ class Ticket(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     closed_at = models.DateTimeField(null=True, blank=True)
+
+class Feedback(models.Model):
+    user_message = models.TextField()  # Consulta del usuario
+    bot_response = models.TextField()  # Respuesta del bot
+    timestamp = models.DateTimeField(auto_now_add=True)  # Fecha de creación
+
+    def __str__(self):
+        return f"Consulta: {self.user_message} | Respuesta: {self.bot_response}"
